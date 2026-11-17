@@ -1,18 +1,17 @@
 FROM continuumio/miniconda3
 
-MAINTAINER Yulia Mostovoy
-
-# copy other resources
-COPY ./environment.yml /
-RUN wget https://raw.githubusercontent.com/yuliamostovoy/bigclipper/main/scripts/bigclipper_getclusters.py && \
-    wget https://raw.githubusercontent.com/yuliamostovoy/bigclipper/main/scripts/bigclipper_processbam.py
+LABEL maintainer="Yulia Mostovoy"
 
 # install conda packages
-RUN conda env create -f /environment.yml && conda clean -a
+COPY docker/environment.yml /
+ENV CONDA_PLUGINS_AUTO_ACCEPT_TOS=yes
+RUN conda env create -f /environment.yml && conda clean -a -y
 RUN echo "conda activate bigclipper" >> ~/.bashrc
 ENV PATH=/opt/conda/envs/bigclipper/bin/:/root/google-cloud-sdk/bin/:${PATH}
 
-# install gsutil
-RUN apt update
-RUN apt install -y curl git-lfs parallel
-RUN curl https://sdk.cloud.google.com | bash
+# install gcloud (used to stream BAMs from GCS)
+RUN apt-get update && apt-get install -y curl git-lfs parallel time && rm -rf /var/lib/apt/lists/*
+RUN curl -sSL https://sdk.cloud.google.com | bash -s -- --disable-prompts --install-dir=/root
+
+# copy BigClipper scripts from the build context (repository root)
+COPY scripts/bigclipper_processbam.py scripts/bigclipper_getclusters.py scripts/bigclipper_verifystream.py scripts/bigclipper_cohort.py /opt/bigclipper/

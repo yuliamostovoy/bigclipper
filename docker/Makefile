@@ -1,11 +1,12 @@
-VERSION = 1.1
-TAG1 = quay.io/ymostovoy/bigclipper:$(VERSION)
-TAG2 = quay.io/ymostovoy/bigclipper:latest
+VERSION = 2.2
+TAG1 = quay.io/ymostovoy/clipper:$(VERSION)
+TAG2 = quay.io/ymostovoy/clipper:latest
 
 all: build push
 
+# build context is the repository root so the image gets the local scripts
 build:
-	docker build -t $(TAG1) -t $(TAG2) .
+	docker build -f Dockerfile -t $(TAG1) -t $(TAG2) ..
 
 push:
 	docker push $(TAG1)
